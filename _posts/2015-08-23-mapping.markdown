@@ -72,7 +72,8 @@ results.each_solution do |s|
   name = "#{s[:nameGA].value}/#{s[:nameEN]}"
   north = s[:lat].value
   east = s[:long].value
- points << DRI::Metadata::Transformations.geojson_string_from_coords(name, "#{east} #{north}")
+  points << DRI::Metadata::Transformations.geojson_string_from_coords(
+                                            name, "#{east} #{north}")
 end
 {% endhighlight %}
 
