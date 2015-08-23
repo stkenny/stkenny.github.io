@@ -1,0 +1,21 @@
+# Permalinks
+#
+# Use of `relative_permalinks` ensures post links from the index work properly.
+permalink:           pretty
+relative_permalinks: true
+
+# Setup
+title:               Stuart Kenny
+tagline:             ''
+description:         'Describing various bits of development, mostly for the Digital Repository of Ireland'
+url:                 https://stkenny.github.io
+baseurl:             ''
+paginate:            5
+
+# About/contact
+author:
+  name:              Stuart Kenny
+  url:               https://twitter.com/stu_kenny
+
+# Custom vars
+version:             1.0.0

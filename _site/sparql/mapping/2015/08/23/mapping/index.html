@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Mapping with added SPARQL &middot; Stuart Kenny
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p>Describing various bits of development, mostly for the Digital Repository of Ireland</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+
+    
+    
+      
+        
+      
+    
+      
+        
+      
+    
+      
+    
+
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2015. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">Stuart Kenny</a>
+            <small></small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">Mapping with added SPARQL</h1>
+  <span class="post-date">23 Aug 2015</span>
+  <p>One of the most requested features for the Digital Repository of Ireland was a mapping interface for the objects stored in the repository. As the repository is built using <a href="https://github.com/projecthydra">Hydra</a>, which includes the <a href="https://github.com/projectblacklight">Blacklight</a> Solr discovery interface, we were able to quickly add this using <a href="https://github.com/projectblacklight/blacklight-maps">Blacklight Maps</a>. </p>
+
+<p><img src="https://stkenny.github.io/assets/map_example.png" alt="Objects displayed on map" /></p>
+
+<p>Blacklight Maps adds a set of mapping views to the Blacklight UI. An extra field, <code>geojson_ssim</code>, added to the Solr index specifies the objects location on the map. This field is formatted in <a href="http://geojson.org/">GeoJSON</a>, which looks like the following (taken from the Blacklight Maps docs):</p>
+
+<p><code>
+  geojson_ssim:
+   - {"type":"Feature","geometry":{"type":"Point","coordinates":[78.96288,20.593684]},"properties":{"placename":"India"}}
+ </code></p>
+
+<p>For DRI an object’s location is contained in its descriptive metadata in XML format. In Dublin Core the <code>dcterms:spatial</code> term is used:</p>
+
+<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;dcterms:spatial</span> <span class="na">xsi:type=</span><span class="s">&quot;dcterms:Point&quot;</span><span class="nt">&gt;</span>
+name=Talbot Street, Dublin; north=53.350346; east=-6.256991
+<span class="nt">&lt;/dcterms:spatial&gt;</span></code></pre></div>
+
+<p>On ingestion a transformation is used to the convert this term to the required GeoJSON format before being stored in the Solr index.</p>
+
+<p>An extra feature that we support is the use of Linked Data URIs within an object’s spatial metadata, specifically <a href="http://www.logainm.ie/en/inf/proj-machines">Linked Logainm</a> URIs. The benefit of supporting URIs is that it allows the cataloguer to enrich their metadata with spatial information using the Logainm RDF reconciliation service through tools such as OpenRefine. The <a href="http://apps.dri.ie/locationLODer/docs/using_linked_logainm_en.pdf">Logainm technical document</a> gives more information on how this is achieved. </p>
+
+<p>Turning the URIs contained in the XML, like this:</p>
+
+<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;dcterms:spatial&gt;</span>http://data.logainm.ie/place/18255<span class="nt">&lt;/dcterms:spatial&gt;</span></code></pre></div>
+
+<p>into the required GeoJSON format Solr field is a two stage process. The first step is where SPARQL is used. A SPARQL query, with the uri value from the XML metadata, retrieves the co-ordinates from the Linked Logainm SPARQL endpoint:</p>
+
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">select</span> <span class="o">=</span> <span class="s2">&quot;select ?nameEN, ?nameGA, ?lat, ?long</span>
+<span class="s2">          where { &lt;</span><span class="si">#{</span><span class="n">uri</span><span class="si">}</span><span class="s2">&gt; &lt;http://xmlns.com/foaf/0.1/name&gt; ?nameGA, ?nameEN;</span>
+<span class="s2">          &lt;http://geovocab.org/geometry#geometry&gt; ?g . ?g geo:lat ?lat; geo:long ?long .</span>
+<span class="s2">          filter(lang(?nameEN)=</span><span class="se">\&quot;</span><span class="s2">en</span><span class="se">\&quot;</span><span class="s2"> &amp;&amp; lang(?nameGA)=</span><span class="se">\&quot;</span><span class="s2">ga</span><span class="se">\&quot;</span><span class="s2">) . }&quot;</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="no">DRI</span><span class="o">::</span><span class="no">Sparql</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span> <span class="vi">@endpoint</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query</span> <span class="nb">select</span></code></pre></div>
+
+<p>For a full explanation of the structure of the query see the Linked Logainm <a href="http://apps.dri.ie/locationLODer/docs/using_linked_logainm_en.pdf">technical document</a>. </p>
+
+<p>The client makes use of the <a href="https://github.com/ruby-rdf/sparql-client">Ruby Sparql client</a> to send the query to the Logainm endpoint and to retrieve the results.</p>
+
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+   <span class="vi">@sparql</span> <span class="o">=</span> <span class="no">SPARQL</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+<span class="k">end</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">begin</span>
+  <span class="n">results</span> <span class="o">=</span> <span class="vi">@sparql</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nb">select</span><span class="p">)</span>
+<span class="k">rescue</span> <span class="no">Exception</span> <span class="o">=&gt;</span> <span class="n">e</span>
+  <span class="no">Rails</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span> <span class="s2">&quot;Unable to query sparql endpoint: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">end</span></code></pre></div>
+
+<p>The second step is to iterate through the result set to create the co-ordinates for the location and to then transform these to the GeoJSON Solr field for display on the map:</p>
+
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">results</span><span class="o">.</span><span class="n">each_solution</span> <span class="k">do</span> <span class="o">|</span><span class="n">s</span><span class="o">|</span>
+  <span class="nb">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">s</span><span class="o">[</span><span class="ss">:nameGA</span><span class="o">].</span><span class="n">value</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">s</span><span class="o">[</span><span class="ss">:nameEN</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="n">north</span> <span class="o">=</span> <span class="n">s</span><span class="o">[</span><span class="ss">:lat</span><span class="o">].</span><span class="n">value</span>
+  <span class="n">east</span> <span class="o">=</span> <span class="n">s</span><span class="o">[</span><span class="ss">:long</span><span class="o">].</span><span class="n">value</span>
+ <span class="n">points</span> <span class="o">&lt;&lt;</span> <span class="no">DRI</span><span class="o">::</span><span class="no">Metadata</span><span class="o">::</span><span class="no">Transformations</span><span class="o">.</span><span class="n">geojson_string_from_coords</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">east</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">north</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">end</span></code></pre></div>
+
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
+  </body>
+</html>

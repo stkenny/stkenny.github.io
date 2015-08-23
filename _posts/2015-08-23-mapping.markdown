@@ -1,0 +1,83 @@
+---
+layout: post
+title:  "Mapping with added SPARQL"
+date:   2015-08-23 10:26:47
+categories: sparql mapping
+---
+One of the most requested features for the Digital Repository of Ireland was a mapping interface for the objects stored in the repository. As the repository is built using [Hydra][hydra], which includes the [Blacklight][blacklight] Solr discovery interface, we were able to quickly add this using [Blacklight Maps][blacklight-maps]. 
+
+![Objects displayed on map]({{ site.url }}/assets/map_example.png)
+
+Blacklight Maps adds a set of mapping views to the Blacklight UI. An extra field, `geojson_ssim`, added to the Solr index specifies the objects location on the map. This field is formatted in [GeoJSON][geojson], which looks like the following (taken from the Blacklight Maps docs):
+
+ ```
+  geojson_ssim:
+   - {"type":"Feature","geometry":{"type":"Point","coordinates":[78.96288,20.593684]},"properties":{"placename":"India"}}
+  ```
+
+For DRI an object's location is contained in its descriptive metadata in XML format. In Dublin Core the `dcterms:spatial` term is used:
+
+{% highlight xml %}
+<dcterms:spatial xsi:type="dcterms:Point">
+name=Talbot Street, Dublin; north=53.350346; east=-6.256991
+</dcterms:spatial>
+{% endhighlight %} 
+
+On ingestion a transformation is used to the convert this term to the required GeoJSON format before being stored in the Solr index.
+
+An extra feature that we support is the use of Linked Data URIs within an object's spatial metadata, specifically [Linked Logainm][logainm] URIs. The benefit of supporting URIs is that it allows the cataloguer to enrich their metadata with spatial information using the Logainm RDF reconciliation service through tools such as OpenRefine. The [Logainm technical document][ll-tech] gives more information on how this is achieved. 
+
+Turning the URIs contained in the XML, like this:
+
+{% highlight xml %}
+<dcterms:spatial>http://data.logainm.ie/place/18255</dcterms:spatial>
+{% endhighlight %}
+
+into the required GeoJSON format Solr field is a two stage process. The first step is where SPARQL is used. A SPARQL query, with the uri value from the XML metadata, retrieves the co-ordinates from the Linked Logainm SPARQL endpoint:
+
+{% highlight ruby %}
+select = "select ?nameEN, ?nameGA, ?lat, ?long
+          where { <#{uri}> <http://xmlns.com/foaf/0.1/name> ?nameGA, ?nameEN;
+          <http://geovocab.org/geometry#geometry> ?g . ?g geo:lat ?lat; geo:long ?long .
+          filter(lang(?nameEN)=\"en\" && lang(?nameGA)=\"ga\") . }"
+
+client = DRI::Sparql::Client.new @endpoint
+results = client.query select
+{% endhighlight %}
+
+For a full explanation of the structure of the query see the Linked Logainm [technical document][ll-tech]. 
+
+The client makes use of the [Ruby Sparql client][sparql-client] to send the query to the Logainm endpoint and to retrieve the results.
+
+{% highlight ruby %}
+def initialize(endpoint)
+   @sparql = SPARQL::Client.new(endpoint)
+end
+{% endhighlight %}
+
+{% highlight ruby %}
+begin
+  results = @sparql.query(select)
+rescue Exception => e
+  Rails.logger.error "Unable to query sparql endpoint: #{e.message}"
+end
+{% endhighlight %}
+
+The second step is to iterate through the result set to create the co-ordinates for the location and to then transform these to the GeoJSON Solr field for display on the map:
+
+{% highlight ruby %}
+results.each_solution do |s|
+  name = "#{s[:nameGA].value}/#{s[:nameEN]}"
+  north = s[:lat].value
+  east = s[:long].value
+ points << DRI::Metadata::Transformations.geojson_string_from_coords(name, "#{east} #{north}")
+end
+{% endhighlight %}
+
+[hydra]:            https://github.com/projecthydra
+[blacklight]:       https://github.com/projectblacklight
+[blacklight-maps]:  https://github.com/projectblacklight/blacklight-maps
+[logainm]:          http://www.logainm.ie/en/inf/proj-machines
+[ll-tech]:          http://apps.dri.ie/locationLODer/docs/using_linked_logainm_en.pdf
+[sparql-client]:    https://github.com/ruby-rdf/sparql-client
+[geojson]:          http://geojson.org/
