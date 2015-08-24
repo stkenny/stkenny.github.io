@@ -23,7 +23,7 @@ name=Talbot Street, Dublin; north=53.350346; east=-6.256991
 </dcterms:spatial>
 {% endhighlight %} 
 
-On ingestion a transformation is used to the convert this term to the required GeoJSON format before being stored in the Solr index.
+On ingestion this term is transformed to the required GeoJSON format before it is stored in the Solr index.
 
 An extra feature that we support is the use of Linked Data URIs within an object's spatial metadata, specifically [Linked Logainm][logainm] URIs. The benefit of supporting URIs is that it allows the cataloguer to enrich their metadata with spatial information using the Logainm RDF reconciliation service through tools such as OpenRefine. The [Logainm technical document][ll-tech] gives more information on how this is achieved. 
 
