@@ -1,0 +1,22 @@
+---
+layout: post
+title:  "DRI v15.08"
+date:   2015-08-26 11:34:47
+categories: repository releases
+---
+
+A new release of the repository software, the first since launch, has been deployed to the production system. This release includes: 
+
+- upgraded [Hydra][hydra], [ActiveFedora][active-fedora], [sufia-models][sufia-models] versions
+- changed workflow for managing organisations
+- editor's can remove draft objects and individual assets attached to draft objects
+- completed DOI implementation
+
+Completing the [DOI][datacite-doi] functionality means we can now begin the process of minting DOIs for the collections currently published in the repository. Initially this will be done on a collection by collection basis. Collections ingested in the future will be assigned DOIs at time of publication.
+
+You can access the repository at <https://repository.dri.ie>.
+
+[hydra]:            https://github.com/projecthydra/hydra-head/blob/master/HISTORY.textile
+[active-fedora]:    https://github.com/projecthydra/active_fedora/releases
+[sufia-models]:     https://github.com/projecthydra/sufia/blob/master/History.md
+[datacite-doi]:     https://www.datacite.org/faq#n147
