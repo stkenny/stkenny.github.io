@@ -12,7 +12,7 @@ A new release of the repository software, the first since launch, has been deplo
 - editor's can remove draft objects and individual assets attached to draft objects
 - completed DOI implementation
 
-Completing the [DOI][datacite-doi] functionality means we can now begin the process of minting DOIs for the collections currently published in the repository. Initially this will be done on a collection by collection basis. Collections ingested in the future will be assigned DOIs at time of publication.
+Completing the [DOI][datacite-doi] functionality means we can now begin the process of minting DOIs for the collections currently published in the repository. Initially this will be done on a collection by collection basis. Once configured, collections ingested in the future will be assigned DOIs at time of publication.
 
 You can access the repository at <https://repository.dri.ie>.
 
