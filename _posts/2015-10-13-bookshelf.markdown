@@ -25,11 +25,11 @@ Getting the page image is then a two step process. First, query solr for the ID 
 
 ![The page-turner]({{ site.url }}/assets/flipbook.png)
 
-The bookshelf was then added. This was done by following this blog post, [http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/]. It makes use of CSS and JavaScript to create the bookshelf. Clicking on a book should bring you to the flipbook page.
+For no reason other than I thought it might look nice I started looking at how to add a bookshelf to hold the 'books'. Initially I found a JavaScript example, but then saw this blog post, <http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/>. It makes use of CSS, HTML5 and JavaScript. By integrating this with the Rails app I could have the book on the shelf link to the flipbook page.
 
 ![The bookshelf]({{ site.url }}/assets/shelf.png)
 
-The final stage was to try out [Heroku][heroku], to deploy the app as a demo. You should be able to access it at [https://dry-savannah-3204.herokuapp.com/books].
+The final stage was to try out [Heroku][heroku] to deploy the app as a demo. You should be able to access it at <https://dry-savannah-3204.herokuapp.com/books>. I'm using the free service, so it might not always be available.
 
 Obviously this isn't the cleanest solution, and it could do with a lot of tweaking, but as an exercise in the Rails pipeline it was quite useful.
 
