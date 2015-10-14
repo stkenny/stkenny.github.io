@@ -4,28 +4,28 @@ title:  "DRI DIY: Building a bookshelf"
 date:   2015-10-13 15:19:33
 categories: rails javascript css
 ---
-During the run up to the DRI launch, in order to give myself a break from ingesting collections, I was playing around with a JavaScript page-turner. I revisited that recently to try and make it work through the repository API, rather than connecting directly to the Solr service. I took this as an opportunity to play around with some JavaScript and CSS in Rails. I guess it turned into more of an exercise in self-assembly rather than DIY, as I pieced a lot of existing code together.
+During the run up to the DRI launch, to take a break from ingesting collections, I was playing around with a JavaScript page-turner. I re-visited that recently to make it work through the repository API, rather than connecting directly to the Solr service. This was so that it could be used as a standalone application outside of the local network. I took this as an opportunity to play around with some JavaScript and CSS in Rails. I guess it turned into more of an exercise in self-assembly rather than DIY, as I pieced a lot of existing code together.
 
-The main library used is [Turn.js][turnjs], a JavaScript library that makes it easy to create a nice looking flip book. Although the code for this was straightfoward, the problem is with our current data models. A work in progress is to have a way to define relationships between objects such as 'is a page of', 'next page', or 'previous page' and so on. I needed a way of finding pages and determining order. Happily, for at least one of our collections, the page number could be determined from the identifier used in the metadata:
+[Turn.js][turnjs] is a JavaScript library that makes it easy to create a nice looking flip book. With this library the code needed to create and display a book with hardcoded pages was straightforward. The idea was to build the book dynamically using images from a collection stored in the DRI repository. To do this it was necessary to have a way to translate page numbers to object IDs. For at least one of our collections this was possible thanks to a field in the object metadata that could be mapped to the page number:
 
 {% highlight xml %}
 <dc:identifier>1915_0002</dc:identifier>
 {% endhighlight %}
 
-We can translate from a page number to the identifier with a simple Ruby template String:
+By using a Ruby template string, the identifier can be obtained from the page number quite easily:
 
 {% highlight ruby %}
 page = 2
-template = "1915_\04d"
+template = "1915_%04d"
 
 identifier = template % page
 {% endhighlight %}
 
-Getting the page image is then a two step process. First, query solr for the ID of the object with the correct identifier and then retrieve the list of available surrogates for that object. We can then choose the surrogate file that we want to use from the returned list, in this case 'lightbox_format'. The Turn.js library pre-fetches the next 5 pages if they are not already in the model, so load time of the images is at least partially minimised.
+The object's ID can be retrieved by submitting a query to the repository containing this identifier. Once we have the ID the list of available images for that object can be retrieved with another API call. The repository returns a JSON list of file URLs. Using the URL from this list that corresponds to the format needed the page can be created and added to the book.
 
 ![The page-turner]({{ site.url }}/assets/flipbook.png)
 
-For no reason other than I thought it might look nice I started looking at how to add a bookshelf to hold the 'books'. Initially I found a JavaScript example, but then saw this blog post, <http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/>. It makes use of CSS, HTML5 and JavaScript. By integrating this with the Rails app I could have the book on the shelf link to the flipbook page.
+For no reason other than I thought it might look nice I started looking at how to add a bookshelf to hold the 'books'. Finding and following this blog post, <http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/>, showed how it could be done. It makes use of CSS, HTML5 and JavaScript. Taking the code and integrating it with the Rails asset pipeline allowed the book to be displayed on a 'shelf'. Clicking the book links through to the flip book page.
 
 ![The bookshelf]({{ site.url }}/assets/shelf.png)
 
