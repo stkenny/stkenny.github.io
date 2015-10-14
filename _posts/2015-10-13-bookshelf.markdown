@@ -25,7 +25,25 @@ The object's ID can be retrieved by submitting a query to the repository contain
 
 ![The page-turner]({{ site.url }}/assets/flipbook.png)
 
-For no reason other than I thought it might look nice I started looking at how to add a bookshelf to hold the 'books'. Finding and following this blog post, <http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/>, showed how it could be done. It makes use of CSS, HTML5 and JavaScript. Taking the code and integrating it with the Rails asset pipeline allowed the book to be displayed on a 'shelf'. Clicking the book links through to the flip book page.
+Another post, <https://github.com/blasten/turn.js/wiki/Making-pages-dynamically-with-Ajax>, gave the steps needed to dynamically add pages to the book. An AJAX call is made to the page turner app controller that handles all the steps above, and returns a DIV containing the page URL.
+
+{% highlight ruby }
+def page
+    book_id = params[:book_id]
+    page = params[:id]
+
+    # Find the PageTurner model for this book
+    turner = PageTurner.find(book_id)
+
+    # Use the model to retrieve the image URL to use for the given page number
+    url = turner.page_url(page) if turner
+
+    # Return the HTML to add to the flip book
+    render text: "<div><img src='#{url}'/></div>"
+end
+{% endhighlight %}
+
+For no reason other than I thought it might look nice I started looking at how to add a bookshelf to hold the 'books'. Finding and following this blog post, <http://www.hmp.is.it/making-a-fancy-book-using-html5-canvases/>, showed how it could be done. It makes use of CSS, HTML5 and JavaScript. Taking the code and integrating it with the Rails asset pipeline allowed the book to be displayed on a 'shelf'. Clicking the book links through to the flip book.
 
 ![The bookshelf]({{ site.url }}/assets/shelf.png)
 
