@@ -27,7 +27,7 @@ The object's ID can be retrieved by submitting a query to the repository contain
 
 Another post, <https://github.com/blasten/turn.js/wiki/Making-pages-dynamically-with-Ajax>, gave the steps needed to dynamically add pages to the book. An AJAX call is made to the page turner app controller that handles all the steps above, and returns a DIV containing the page URL.
 
-{% highlight ruby }
+{% highlight ruby %}
 def page
     book_id = params[:book_id]
     page = params[:id]
