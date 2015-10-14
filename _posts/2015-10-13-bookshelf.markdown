@@ -35,7 +35,8 @@ def page
     # Find the PageTurner model for this book
     turner = PageTurner.find(book_id)
 
-    # Use the model to retrieve the image URL to use for the given page number
+    # Use the model to retrieve the image 
+    # URL to use for the given page number
     url = turner.page_url(page) if turner
 
     # Return the HTML to add to the flip book
