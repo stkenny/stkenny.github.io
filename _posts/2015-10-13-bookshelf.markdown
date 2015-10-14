@@ -6,6 +6,8 @@ categories: rails javascript css
 ---
 During the run up to the DRI launch, to take a break from ingesting collections, I was playing around with a JavaScript page-turner. I re-visited that recently to make it work through the repository API, rather than connecting directly to the Solr service. This was so that it could be used as a standalone application outside of the local network. I took this as an opportunity to play around with some JavaScript and CSS in Rails. I guess it turned into more of an exercise in self-assembly rather than DIY, as I pieced a lot of existing code together.
 
+(tl;dr demo here: <http://bit.ly/1LuoEkQ>)
+
 [Turn.js][turnjs] is a JavaScript library that makes it easy to create a nice looking flip book. With this library the code needed to create and display a book with hardcoded pages was straightforward. The idea was to build the book dynamically using images from a collection stored in the DRI repository. To do this it was necessary to have a way to translate page numbers to object IDs. For at least one of our collections this was possible thanks to a field in the object metadata that could be mapped to the page number:
 
 {% highlight xml %}
