@@ -201,7 +201,8 @@ private void addMarker(String placename, HashMap<String, String> placeEntry){
                        iconFactory.makeIcon(noOfObjects)))
              .position(new LatLng(Double.valueOf(latitude),
                        Double.valueOf(longitude)))
-             .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV())
+             .anchor(iconFactory.getAnchorU(), 
+                     iconFactory.getAnchorV())
              .title(placename);
   mMap.addMarker(options);
 }
