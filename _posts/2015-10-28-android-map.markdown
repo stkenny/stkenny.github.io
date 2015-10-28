@@ -9,10 +9,10 @@ Have you ever been out walking and wondered if DRI contains any objects related 
 No, neither have I, but having taken a short online course in Android development I thought I'd put together
 a simple app to do this.
 
-First we need a basic Andoid application that will display a map. There are plenty of guides 
+First we need a basic Android application that will display a map. There are plenty of guides 
 available on how to do this, for example [here][android-map].
 
-Next is to know where the user is and to receive updates on their location
+Next is to find out where the user is and to receive updates on their location
 as they move. How to do this is covered well in the [Android developer guide][android-location-updates].
 
 A very brief summary is:
@@ -207,15 +207,19 @@ private void addMarker(String placename, HashMap<String, String> placeEntry){
 }
 {% endhighlight %}
 
-The marker shows the number of objects. Clicking on the marker displays the placename, and clicking on this again
-opens the device's browser and displays the objects in the repository that contain that placename in their metadata.
-The screenshots below show the application running in a Nexus 5 emulator.
+The marker shows the number of objects. 
 
 ![User's location and the place markers displayed on the map]({{ site.url }}/assets/android_map_example.png)
 
+Clicking on the marker displays the placename.
+
 ![Place title links to Repository search]({{ site.url }}/assets/android_map_marker.png)
 
+Clicking on the title opens the device's browser and displays the objects in the repository that contain that placename in their metadata.
+
 ![Nearby objects displayed in Repository]({{ site.url }}/assets/android_map_results.png)
+
+The screenshots above show the working application running on an emulator of a Nexus 5.
 
 [android-map]:                https://developers.google.com/maps/documentation/android-api/start
 [android-location-updates]:   http://developer.android.com/training/location/receive-location-updates.html
