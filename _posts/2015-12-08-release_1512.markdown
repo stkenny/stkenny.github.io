@@ -6,14 +6,15 @@ categories: repository releases
 ---
 
 Release 15.12 of the repository software has been tagged and is running on the production system.
-The focus of this release was on refactoring of the code and updating the dependencies.
+This was primarily a maintenance release focused on refactoring of code and updating dependencies.
 
 This release includes: 
 
-- upgraded [Hydra][hydra], [ActiveFedora][active-fedora], [sufia-models][sufia-models] versions
+- updated [Hydra][hydra], [ActiveFedora][active-fedora], [sufia-models][sufia-models] versions
 - modified styling
-- changes to some workflows for object editing
-- show background processing status when an asset is added to an object
+- changes to editor workflows
+
+You can access the repository at <https://repository.dri.ie>.
 
 [hydra]:            https://github.com/projecthydra/hydra-head/blob/master/HISTORY.textile
 [active-fedora]:    https://github.com/projecthydra/active_fedora/releases
