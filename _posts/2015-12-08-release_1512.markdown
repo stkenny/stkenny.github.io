@@ -1,0 +1,20 @@
+---
+layout: post
+title:  "DRI v15.12"
+date:   2015-12-08 12:53:00
+categories: repository releases
+---
+
+Release 15.12 of the repository software has been tagged and is running on the production system.
+The focus of this release was on refactoring of the code and updating the dependencies.
+
+This release includes: 
+
+- upgraded [Hydra][hydra], [ActiveFedora][active-fedora], [sufia-models][sufia-models] versions
+- modified styling
+- changes to some workflows for object editing
+- show background processing status when an asset is added to an object
+
+[hydra]:            https://github.com/projecthydra/hydra-head/blob/master/HISTORY.textile
+[active-fedora]:    https://github.com/projecthydra/active_fedora/releases
+[sufia-models]:     https://github.com/projecthydra/sufia/blob/master/History.md
