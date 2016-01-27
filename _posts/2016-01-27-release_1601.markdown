@@ -1,0 +1,27 @@
+---
+layout: post
+title:  "DRI v16.01"
+date:   2016-01-27 15:14:00
+categories: repository releases
+---
+
+Release 16.01 of the repository software has been tagged and deployed to the production system.
+For this release some changes were made to how an object is edited. It should now be easier to manage
+the organisations attached to a collection. Also access controls and licences can now be modified
+separately from the metadata.
+
+Changes include: 
+
+- updated [Hydra][hydra], [sufia-models][sufia-models]  and [Blacklight][blacklight] versions
+- Rails updated to latest to include [security updates][rails-security]
+- some styling changes
+- improved validation of metadata entry forms
+- only display user's collections in their profile
+- changes to views for editing objects
+
+You can access the repository at <https://repository.dri.ie>.
+
+[hydra]:            https://github.com/projecthydra/hydra-head/blob/master/HISTORY.textile
+[blacklight]:       https://github.com/projectblacklight/blacklight/releases/tag/v5.16.3
+[sufia-models]:     https://github.com/projecthydra/sufia/blob/master/History.md
+[rails-security]:   http://weblog.rubyonrails.org/2016/1/25/Rails-5-0-0-beta1-1-4-2-5-1-4-1-14-1-3-2-22-1-and-rails-html-sanitizer-1-0-3-have-been-released/
