@@ -8,7 +8,7 @@ title:               Stuart Kenny
 tagline:             ''
 description:         'Describing various bits of development, mostly from the Digital Repository of Ireland.'
 url:                 https://stkenny.github.io
-baseurl:             #'https://stkenny.github.io'
+baseurl:             'https://stkenny.github.io'
 paginate:            5
 
 # About/contact
