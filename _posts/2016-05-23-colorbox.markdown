@@ -2,7 +2,7 @@
 layout: post
 title:  "Colorbox"
 date:   2016-05-23 10:35:00
-categories: repository rails javascript
+categories: rails javascript
 ---
 I've been modifying the Repository code to allow for additional storage backends for the surrogates
 created from the assets attached to Digital Objects. Currently we use an S3 compatible backend, but would
@@ -31,7 +31,7 @@ The new URLs did not end in the surrogate filename, so automatic detection was n
 to the colorbox initializer the image finally displayed correctly.
 
 {% highlight java %}
-colorbox({rel:'group1', maxWidth:'95%', maxHeight:'95%', photo: true});
+colorbox({rel:"group1", maxWidth:"95%", maxHeight:"95%", photo: true});
 {% endhighlight %}
 
 [colorbox-rails]:	https://github.com/stevo/colorbox-rails
