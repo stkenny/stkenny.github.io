@@ -2,7 +2,7 @@
 layout: post
 title:  "Mapping with added SPARQL"
 date:   2015-08-23 10:26:47
-categories: sparql mapping
+categories: semantic sparql mapping
 ---
 One of the most requested features for the Digital Repository of Ireland was a mapping interface for the objects stored in the repository. As the repository is built using [Hydra][hydra], which includes the [Blacklight][blacklight] Solr discovery interface, we were able to quickly add this using [Blacklight Maps][blacklight-maps]. 
 
