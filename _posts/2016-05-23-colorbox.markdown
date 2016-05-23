@@ -1,0 +1,38 @@
+---
+layout: post
+title:  "Colorbox"
+date:   2016-05-23 10:35:00
+categories: repository rails javascript
+---
+I've been modifying the Repository code to allow for additional storage backends for the surrogates
+created from the assets attached to Digital Objects. Currently we use an S3 compatible backend, but would
+like the option of simple file storage. Part of this requires serving the surrogate files from the application
+rather than re-directing to the S3 URLs.
+
+Serving the files is reasonably straightforward with Rails. Once the path, or URL for the file is retrieved from
+the storage backend it can be returned using the send data method. Including the type in the response is important
+if you want the file to display inline.
+
+{% highlight ruby %}
+open(file) do |f|
+ send_data f.read, 
+ type: MIME::Types.type_for(file_name).first.content_type, 
+ disposition: 'inline'
+end
+{% endhighlight %}
+
+A harder to figure out problem was with the [lightbox][colorbox-rails] that we use to display a larger version of the surrogate. 
+Opening the new surrogate URL in a browser displayed the surrogate inline correctly, however, within the lightbox
+the image would display as text. Eventually I found this option in the [colorbox documentation][colorbox]:
+
+|photo|	false	|If true, this setting forces Colorbox to display a link as a photo. Use this when automatic photo detection fails (such as using a url like 'photo.php' instead of 'photo.jpg')|
+
+The new URLs did not end in the surrogate filename, so automatic detection was not working. By adding the photo option
+to the colorbox initializer the image finally displayed correctly.
+
+{% highlight java %}
+colorbox({rel:'group1', maxWidth:'95%', maxHeight:'95%', photo: true});
+{% endhighlight %}
+
+[colorbox-rails]:	https://github.com/stevo/colorbox-rails
+[colorbox]:		http://www.jacklmoore.com/colorbox/
