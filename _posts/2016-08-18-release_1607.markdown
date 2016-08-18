@@ -1,0 +1,24 @@
+---
+layout: post
+title:  "DRI v16.07"
+date:   2016-08-18 12:28:00
+categories: repository releases
+---
+
+Release 16.07 of the repository software has been deployed to the production system. It was a bit of a
+struggle to get this one out, mostly due to an Ansible update on the deployment machines. Upgrading to 
+Ansible 2 caused quite a few problems with our multi-stage setup (i.e., deploying to test and production).
+There were also issues related to the [XML editor](rails/javascript/2016/08/07/xml_editor/) in the production 
+vs development environment.
+
+Changes include: 
+
+- Rails updated to latest to include important [security updates][rails-security]
+- XML editor for MODS and MARC metadata
+- Allow depositor to see status of potentially long running background jobs (e.g. when publishing a collection)
+- Added [Honeybadger][honeybadger] application monitoring
+
+You can access the repository at <https://repository.dri.ie>.
+
+[rails-security]:   http://weblog.rubyonrails.org/2016/8/11/Rails-5-0-0-1-4-2-7-2-and-3-2-22-3-have-been-released/ 
+[honeybadger]:      https://www.honeybadger.io/
