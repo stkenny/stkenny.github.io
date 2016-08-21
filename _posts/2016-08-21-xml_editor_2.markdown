@@ -1,0 +1,94 @@
+---
+layout: post
+title:  "XML Editing Part 2"
+date:   2016-08-21 12:12:00
+categories: rails javascript
+---
+
+The gem layout as described in [XML Editing Part 1](rails/javascript/2016/08/07/xml_editor/) works just fine in
+the development environment. As is often the case problems started to occur as soon as I tried it out on
+our test production instance. The issue was with serving the static file from the gem. Generally in production
+the application will not be configured to do this, as the server software (e.g. Apache) will be used instead.
+So the decision was between configuring Apache to serve the needed javascript file, or modifying the main
+XML editor javascript to use the asset pipeline. The latter option seemed the best approach, as although it
+meant modifying the original code, it did remove the need for the duplication of the cycle.js file, and also
+it meant everything was handled by the Rails asset pipeline.
+
+The change required for this was fairly minor. Instead of trying to load the cycle.js file from the configured lib path, 
+the URL to the file needs to be constructed using the asset path:
+
+{% highlight js %}
+var cyclePath = 
+   "<%= asset_path('jquery-xmleditor/vendor/cycle.js') %>"
+{% endhighlight %}
+
+The full URL is then just this path plus the base URL:
+
+{% highlight js %}
+this.cyclePath = this.baseUrl + cyclePath;
+{% endhighlight %}
+
+The base URL can be constructed using the Document.location object:
+
+{% highlight js %}
+var protocol = document.location.protocol
+var host = document.location.host
+var url = document.location.protocol + "//" 
+        + document.location.host + "/"
+{% endhighlight %}
+
+This path can then be used to import the cycle.js script:
+
+{% highlight js %}
+var blob = new Blob([
+    "self.onmessage = function(e) {" +
+    "importScripts(e.data.cyclePath);" 
+    ...
+{% endhighlight %}
+
+The other fix needed was that the script orginally used a POST to submit the XML back to the server, whereas our application routes
+use a PUT. Also it seemed to be necessary to submit the request as a form to the Rails application:
+
+{% highlight js %}
+dataType: "text",
+// Need to change the content type from application/xml
+contentType: "application/x-www-form-urlencoded",
+method : "PUT", //changed from POST
+data : { xml: xmlString }, //send the XML string as a form parameter
+{% endhighlight %}
+
+With these changes made it was possible to add the editor in a new view and have it displaying correctly in production.
+The editor is configured to retrieve and upload the XML metadata using the route helpers. Similarly helpers are used to
+get the asset pipeline URLs to the schema and javascript files.
+
+{% highlight html ruby %}
+<div id="xml_editor">
+</div>
+<script>
+  $(function() {
+    $("#xml_editor").xmlEditor({
+      ajaxOptions: {
+        xmlRetrievalPath: "<%= object_metadata_path(object) %>",
+        xmlUploadPath : "<%= object_metadata_path(object) %>"
+      },
+      submitResponseHandler: function(response) {
+        if (response.startsWith(
+            "<%= t('dri.flash.notice.metadata_updated') %>")) 
+        {
+          return false;
+        } else {
+          return response;
+        }
+      },
+      schema : '<%= asset_path("schemas/#{schema}") %>',
+      libPath : '<%= asset_path("jquery-xmleditor/vendor") %>'
+    });
+ });
+</script>
+{% endhighlight %}
+
+![XML editor view in the application]({{ site.url }}/assets/xml_editor.png)
+
+[ucla-xmleditor]:  https://github.com/UNC-Libraries/jquery.xmleditor
+[gem-github]:      https://github.com/stkenny/jquery-xmleditor-rails
+
