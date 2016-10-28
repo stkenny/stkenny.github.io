@@ -23,21 +23,21 @@ The main method that had to be written was the _web_request_url method. This tak
 
 {% highlight python %}
 def _web_request_url(self, ident):
-        # only split identifiers that look like template ids;
-        # ignore other requests (e.g. favicon)
-        if self.delimiter not in ident:
-            return
+  # only split identifiers that look like template ids;
+  # ignore other requests (e.g. favicon)
+  if self.delimiter not in ident:
+    return
 
-        bucket_suffix, keyname = ident.split(self.delimiter, 1)
+  bucket_suffix, keyname = ident.split(self.delimiter, 1)
 
-        if self.ident_suffix:
-            keyname = u'{0}_{1}'.format(keyname, self.ident_suffix)
+  if self.ident_suffix:
+    keyname = u'{0}_{1}'.format(keyname, self.ident_suffix)
 
-        bucketname = '.'.join([self.bucket,bucket_suffix])
-        logger.debug('Getting img from Rados S3. bucketname, 
-                   keyname: %s, %s' % (bucketname, keyname))
+    bucketname = '.'.join([self.bucket,bucket_suffix])
+    logger.debug('Getting img from Rados S3. bucketname, 
+                  keyname: %s, %s' % (bucketname, keyname))
 
-        conn = boto.connect_s3(
+     conn = boto.connect_s3(
               aws_access_key_id = self.access_key,
               aws_secret_access_key = self.secret_key,
               host = self.endpoint,
@@ -45,13 +45,13 @@ def _web_request_url(self, ident):
               calling_format = boto.s3.connection.OrdinaryCallingFormat(),
         )
 
-        bucket = conn.get_bucket(bucketname)
-        key = bucket.get_key(keyname)
-        auth_url = key.generate_url(3600, query_auth=True, 
-                                     force_http=True)
+     bucket = conn.get_bucket(bucketname)
+     key = bucket.get_key(keyname)
+     auth_url = key.generate_url(3600, query_auth=True, 
+                                 force_http=True)
 
-        return key.generate_url(3600, query_auth=True, 
-                                force_http=True)
+     return key.generate_url(3600, query_auth=True, 
+                             force_http=True)
 {% endhighlight %}
 
 In the code above I'm taking an identifier of the form 'object-id:file-id' and converting it to a bucket and key. The object-id is the bucket
@@ -73,22 +73,22 @@ they would be able to retrieve the image directly from the Loris server. To get 
 
 {% highlight python %}
 class _AbstractAuthorizationService(object):
-    def __init__(self, config):
-        self.config = config
+  def __init__(self, config):
+    self.config = config
 
-    def can(self, action, ident):
-        """
+  def can(self, action, ident):
+    """
 
-        Args:
-            action (str):
-                The action being performed (info, or show)
-            ident (str):
-                The identifier for the image.
-        Returns:
-            bool
-        """
-        cn = self.__class__.__name__
-        raise NotImplementedError('can() not implemented for %s' % (cn,))
+    Args:
+      action (str):
+           The action being performed (info, or show)
+      ident (str):
+           The identifier for the image.
+      Returns:
+        bool
+      """
+      cn = self.__class__.__name__
+      raise NotImplementedError('can() not implemented for %s' % (cn,))
 {% endhighlight %}
 
 It t contains one method that needs to be implemented. The can method takes the action being called and the identifier and
@@ -98,31 +98,31 @@ The implementation of the abstract class simply makes a HEAD HTTP call to the DR
 
 {% highlight python %}
 class RiiifAuthorizationService(_AbstractAuthorizationService):
-    """
-    Makes an HTTP HEAD call to a Riiif engine for authentication.
-    """
+  """
+  Makes an HTTP HEAD call to a Riiif engine for authentication.
+  """
 
-    def __init__(self, config):
-        super(RiiifAuthorizationService, self).__init__(config)
-        self.auth_endpoint = self.config.get('auth_endpoint', None)
+  def __init__(self, config):
+      super(RiiifAuthorizationService, self).__init__(config)
+      self.auth_endpoint = self.config.get('auth_endpoint', None)
 
-    def can(self, action, ident):
-       if action == 'info':
-            auth_fp = self.auth_endpoint + '/' + ident + '/info.json'
-       else:
-           auth_fp = self.auth_endpoint + '/' + ident + '/full/full/0/default.jpg'
+  def can(self, action, ident):
+     if action == 'info':
+          auth_fp = self.auth_endpoint + '/' + ident + '/info.json'
+     else:
+         auth_fp = self.auth_endpoint + '/' + ident + '/full/full/0/default.jpg'
 
-       try:
-           with closing(requests.head(auth_fp, verify=False)) as response:
-               if response.status_code is 200:
-                   return True
-               else:
-                   return False
+     try:
+         with closing(requests.head(auth_fp, verify=False)) as response:
+             if response.status_code is 200:
+                 return True
+             else:
+                 return False
 
-       except requests.exceptions.MissingSchema as ms:
-           message = 'Server Side Error: Error making authentication request.'
-           logger.error(message)
-           raise AuthServiceException(500, message)
+     except requests.exceptions.MissingSchema as ms:
+         message = 'Server Side Error: Error making authentication request.'
+         logger.error(message)
+         raise AuthServiceException(500, message)
 {% endhighlight %}
 
 In the Loris webapp we can then add calls to this service where needed.
