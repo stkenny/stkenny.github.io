@@ -1,0 +1,142 @@
+---
+layout: post
+title:  "Loris"
+date:   2016-10-28 14:16:00
+categories: iiif loris
+---
+
+Having deployed [Loris][loris] as an image server as described in the previous post, it seemed like this
+was the way to go for the IIIF setup. Off-loading serving of the images from the DRI rails application
+to an external service should provide performance benefits. It did, however, mean writing some custom 
+code so that the Loris server could retrieve the images from our [Ceph Rados Gateway][rados]. 
+The Rados Gateway is accessed through an AWS S3 compatible interface.
+
+Loris allows for images to be retrieved from different backend services by implementing the resolver._AbstractResolver class.
+Simple implementations are provided for images stored on the filesystem or retrieved from HTTP URLs. As files stored in S3 can be 
+accessed using HTTP URLs extending the SimpleHTTPResolver was the easiest way to add the functionality needed. The job of the 
+resolver is to take an image identifier and resolve it to a path that can then be used to access the file. The HTTP resolver
+will generate a URL from the identifier, retrieve the image from that URL and store it in a local cache. The path to the 
+file in the cache can then be returned. In our case then I needed the resolver to map an indentifier to an S3 bucket and key
+and to then generate a URL that could be used to download the file to the local cache.
+
+The main method that had to be written was the _web_request_url method. This takes the identifier and creates an S3 authenticated URL.
+
+{% highlight python %}
+def _web_request_url(self, ident):
+        # only split identifiers that look like template ids;
+        # ignore other requests (e.g. favicon)
+        if self.delimiter not in ident:
+            return
+
+        bucket_suffix, keyname = ident.split(self.delimiter, 1)
+
+        if self.ident_suffix:
+            keyname = u'{0}_{1}'.format(keyname, self.ident_suffix)
+
+        bucketname = '.'.join([self.bucket,bucket_suffix])
+        logger.debug('Getting img from Rados S3. bucketname, 
+                   keyname: %s, %s' % (bucketname, keyname))
+
+        conn = boto.connect_s3(
+              aws_access_key_id = self.access_key,
+              aws_secret_access_key = self.secret_key,
+              host = self.endpoint,
+              is_secure=self.ssl_check, # uncomment if you are not using ssl
+              calling_format = boto.s3.connection.OrdinaryCallingFormat(),
+        )
+
+        bucket = conn.get_bucket(bucketname)
+        key = bucket.get_key(keyname)
+        auth_url = key.generate_url(3600, query_auth=True, 
+                                     force_http=True)
+
+        return key.generate_url(3600, query_auth=True, 
+                                force_http=True)
+{% endhighlight %}
+
+In the code above I'm taking an identifier of the form 'object-id:file-id' and converting it to a bucket and key. The object-id is the bucket
+name and the file-id forms the first part of the key contained in that bucket. These can be used in standard S3 client code to 
+generate an authenticated HTTP URL to the file. The S3 credentials are passed in using environment variables and assigned in the class
+init method.
+
+{% highlight python %}
+self.access_key = self.config.get('access_key', 
+      environ.get('AWS_ACCESS_KEY_ID', None))
+self.secret_key = self.config.get('secret_key', 
+      environ.get('AWS_SECRET_ACCESS_KEY', None))
+{% endhighlight %}
+
+As I've extended the SimpleHTTPResolver it can now handle retrieving the file and storing it to the local cache.
+
+One thing that was missing was the possibility of authorizing access to the images. If someone had the PIDs of the object and file
+they would be able to retrieve the image directly from the Loris server. To get around this I added an AbstractAuthorizationService.
+
+{% highlight python %}
+class _AbstractAuthorizationService(object):
+    def __init__(self, config):
+        self.config = config
+
+    def can(self, action, ident):
+        """
+
+        Args:
+            action (str):
+                The action being performed (info, or show)
+            ident (str):
+                The identifier for the image.
+        Returns:
+            bool
+        """
+        cn = self.__class__.__name__
+        raise NotImplementedError('can() not implemented for %s' % (cn,))
+{% endhighlight %}
+
+It t contains one method that needs to be implemented. The can method takes the action being called and the identifier and
+returns a true or false depending on whether the access should be granted or refused.
+
+The implementation of the abstract class simply makes a HEAD HTTP call to the DRI webapp to determine if the access is authorized.
+
+{% highlight python %}
+class RiiifAuthorizationService(_AbstractAuthorizationService):
+    """
+    Makes an HTTP HEAD call to a Riiif engine for authentication.
+    """
+
+    def __init__(self, config):
+        super(RiiifAuthorizationService, self).__init__(config)
+        self.auth_endpoint = self.config.get('auth_endpoint', None)
+
+    def can(self, action, ident):
+       if action == 'info':
+            auth_fp = self.auth_endpoint + '/' + ident + '/info.json'
+       else:
+           auth_fp = self.auth_endpoint + '/' + ident + '/full/full/0/default.jpg'
+
+       try:
+           with closing(requests.head(auth_fp, verify=False)) as response:
+               if response.status_code is 200:
+                   return True
+               else:
+                   return False
+
+       except requests.exceptions.MissingSchema as ms:
+           message = 'Server Side Error: Error making authentication request.'
+           logger.error(message)
+           raise AuthServiceException(500, message)
+{% endhighlight %}
+
+In the Loris webapp we can then add calls to this service where needed.
+
+{% highlight python %}
+is_authenticated = self.auth_service.can('info', ident)
+if is_authenticated is False:
+   msg = "could not resolve identifier: %s " % (ident)
+   logger.error(msg)
+   raise ResolverException(404, msg)
+{% endhighlight %}
+
+[rados]:             http://docs.ceph.com/docs/jewel/radosgw/
+[iiif]:              http://iiif.io/
+[riiif]:             https://github.com/curationexperts/riiif
+[loris]:             https://github.com/loris-imageserver/loris
+[loris-install]:     http://doc.biblissima-condorcet.fr/loris-setup-guide-ubuntu-debian
