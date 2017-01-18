@@ -1,0 +1,147 @@
+---
+layout: post
+title:  "A Break From Reality"
+date:   2017-01-18 13:00:00
+categories: vr unity
+---
+
+Thanks to buying a very cheap Google Cardboard viewer I became very distracted with VR and 3d. Starting out
+with Android Studio, I then moved on to trying out the [Unity][unity] game engine. I was following a really 
+good tutorial for building a [virtual museum][tutorial], thinking that it might be a fun idea to use with 
+some of the DRI objects.
+
+Getting used to Unity took some time. The other problem was that the tutorial was written for an earlier Unity
+version. I was using Unity 5, so some of the scripts were not working as expected. The idea of the demo is that
+you can walk around the museum and view information on the exhibits in a pop-up that appears when you click 
+the fire button while standing in front of an object. It was this interaction that didn't seem to be working.
+
+The tutorial provides 3 scripts that should be attached to game objects. It was the ArtifactViewer.js script
+that was causing problems. This script is intended to disable the FPS controls when the user presses fire
+while standing in front of an object and sends a message to show the information GUI. However, it would not 
+compile due to errors about MouseLook. Specifically that it did not denote a valid type. This is the original
+script.
+
+{%highlight javascript%}
+//Private variables
+
+//Control of the Look X Axis
+private var mouseX : MouseLook;
+// Control of the Look Y Axis
+private var mouseY : MouseLook;
+// Controls of the movement
+private var controller : CharacterMotor;
+
+// The Start function is part of the Unity API.
+//     It's called once when the application begins running
+
+// Purpose: Find the various controls and store them in a variable for later use
+// This code demands that the script be attached to Main Camera inside
+// the First Person Controller. Otherwise, there will be errors.
+function Start()
+{
+        mouseX = GetComponent(MouseLook);
+        mouseY = transform.parent.GetComponent(MouseLook);
+        controller = transform.parent.GetComponent(CharacterMotor);
+}
+
+
+// Enables or disables the User Controls
+function disableControls(b : boolean)
+{
+        mouseX.enabled = b;
+        mouseY.enabled = b;
+        controller.canControl = b;
+}
+
+// The Update function is part of the Unity API..
+// It's called every frame. It's essentially an infinite loop until
+// the application is shut down.
+
+// Every frame we check to see if the LMB was clicked.
+// If so we do a raycast from the camera to 10 meters out.
+//      If the raycast hits an object with the "Artifact" tag,
+//       disable the FPC Controls and enable the GUI and Rotate Mode
+
+function Update ()
+{
+   if(Input.GetButtonDown("Fire1"))
+   {
+     var fwd = transform.TransformDirection (Vector3.forward);
+     var hit : RaycastHit;
+     if (Physics.Raycast (transform.position, fwd, hit, 10))  // Perform Raycast
+     {
+       if(hit.collider.tag == "Artifact")  // check tag
+       {
+         disableControls(false);
+         // If the object has GUI data, turn it on
+         hit.collider.SendMessage("toggleGUI", true);
+         // If the object has rotate mode, enable it
+         hit.collider.SendMessage("toggleControl", true);
+       }
+     }
+}
+}
+{% endhighlight %}
+
+I tried quite a few things such as adding namespaces. I also realised that the FPS character I was using did
+not have a MouseLook component, so switched to the Rigid Body FPS character which did. None of this helped.
+I figured maybe the issue was with using JS rather than C#, so I tried converting the script. This definitely 
+helped, and I was finally able to get past the compilation errors. But having done this, disabling the controls 
+was still not working. Eventually, after a lot of messing around I ended up not using the MouseLook code at all.
+I changed it to use Cursor lockState based on various forum posts. The working C# script is below. There was
+an extra script that would make the objects rotate which I didn't use.
+I'm sure it would be possible to get the JS script working, but as a beginner this was how I did it.
+
+{% highlight csharp %}
+using UnityEngine;
+using System.Collections;
+using UnityStandardAssets.CrossPlatformInput;
+using UnityStandardAssets.Characters.FirstPerson;
+
+public class artifactViewer : MonoBehaviour {
+
+  private RigidbodyFirstPersonController controller;
+
+  // Use this for initialization
+  void Start () {
+    controller = transform.parent.GetComponent<RigidbodyFirstPersonController>();
+  }
+
+  // Update is called once per frame
+  void Update () {
+    if(Input.GetButtonDown("Fire1"))
+    {
+      Vector3 fwd = transform.TransformDirection (Vector3.forward);
+      RaycastHit hit = new RaycastHit();
+      if (Physics.Raycast (transform.position, fwd, out hit, 10))  // Perform Raycast
+      {
+        if(hit.collider.tag == "Artifact")  // check tag
+        {
+          disableControls(false);
+          // If the object has GUI data, turn it on
+          hit.collider.SendMessage("toggleGUI", true);
+        }
+      }
+    }
+  }
+
+  // Enables or disables the User Controls
+  void disableControls(bool b)
+  {
+    if (b == false) {
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.lockState = CursorLockMode.Confined;
+      Cursor.visible = true;
+    } else {
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.visible = false;
+    }
+
+    controller.enabled = b;
+  }
+}
+{% endhighlight %}
+
+[unity]:         https://unity3d.com
+[tutorial]:      http://gmv.cast.uark.edu/modeling/software-visualization/unity-software-visualization/workflow-unity-software-visualization/a-walkable-unity-demo/
+ 
