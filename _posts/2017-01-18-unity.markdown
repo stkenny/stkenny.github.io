@@ -2,7 +2,7 @@
 layout: post
 title:  "A Break From Reality"
 date:   2017-01-18 13:00:00
-categories: vr unity
+categories: android unity
 ---
 
 Thanks to buying a very cheap Google Cardboard viewer I became very distracted with VR and 3d. Starting out
