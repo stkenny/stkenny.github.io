@@ -1,0 +1,49 @@
+---
+layout: post
+title:  "Linked Data Step 1"
+date:   2017-06-09 20:17:00
+categories: semantic sparql
+---
+
+My on-again, off-again attempts at adding linked data to the DRI app has recently been on again. There
+have been several false starts at how best to translate the object's XML metadata to RDF. My approach until
+now has been to import the metadata into OpenRefine and to then use the RDF extension to reconcile against
+SPARQL endpoints. Following that the metadata can be exported to RDF and imported into a triplestore for
+querying. For two example collections this worked, but it was not exactly scalable. There was also the problem
+of how to handle any updates to the objects. Would the whole process have to be repeated?
+
+A better method seemed to be to break the process into stages, solving conversion to RDF as the first step. By only taking the common
+metadata fields that DRI maps across the metadata standards, converting to RDF is a straightforward process. Using
+content negotiation RDF can simply be added as another output format for an object. The application itself
+can handle the conversion.
+
+A project I've been looking at for a while is the [Research and Education Space (RES) Project][res-project]. This
+project indexes linked open data published by multiple providers. They have provided a set of guides, including one
+for [data providers][res-guide] that explains the format to be used for data publishing. The RDF output produced by the application 
+tries to follow that described in this guide.
+
+The first part of the RDF output is a description of the object document itself.
+
+![Document descriptions]({{ site.url }}/assets/lod_part1_1.png)
+
+You can see in the above that the document has two representations, a HTML webpage and Turtle format RDF output.
+
+Next was the mapping from the XML metadata fields to RDF, using Dublin Core terms.
+
+![Metadata]({{ site.url }}/assets/lod_part1_2.png)
+
+I'm also using a field from the [Europeana Data Model][edm], ```edm:provider```, for the DRI organisation that deposited the object.
+
+Finally then was the description of the asset (content) attached to the object, in this example an image.
+
+![Asset description]({{ site.url }}/assets/lod_part1_3.png)
+
+This uses, as suggested by the RES guide, the [Media RSS][mrss] vocabulary for the directly accessible media.
+ 
+So now I can request any object in RDF TTL format easily. The next step is to perform reconciliation on selected metadata terms and
+to add the resulting links to the RDF output.
+
+[res-project]:         https://bbcarchdev.github.io/res/
+[res-guide]:           https://bbcarchdev.github.io/inside-acropolis/
+[edm]:                 http://pro.europeana.eu/page/edm-documentation
+[mrss]:                http://search.yahoo.com/mrss/
