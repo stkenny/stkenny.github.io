@@ -24,19 +24,19 @@ tries to follow that described in this guide.
 
 The first part of the RDF output is a description of the object document itself.
 
-![Document descriptions]({{ site.url }}/assets/lod_part1_1.png)
+[![Document description]({{ site.url }}/assets/lod_part1_1.png)]({{ site.url }}/assets/lod_part1_1.png)
 
 You can see in the above that the document has two representations, a HTML webpage and Turtle format RDF output.
 
 Next was the mapping from the XML metadata fields to RDF, using Dublin Core terms.
 
-![Metadata]({{ site.url }}/assets/lod_part1_2.png)
+[![Metadata]({{ site.url }}/assets/lod_part1_2.png)]({{ site.url }}/assets/lod_part1_2.png)
 
 I'm also using a field from the [Europeana Data Model][edm], ```edm:provider```, for the DRI organisation that deposited the object.
 
 Finally then was the description of the asset (content) attached to the object, in this example an image.
 
-![Asset description]({{ site.url }}/assets/lod_part1_3.png)
+[![Asset description]({{ site.url }}/assets/lod_part1_3.png)]({{ site.url }}/assets/lod_part1_3.png)
 
 This uses, as suggested by the RES guide, the [Media RSS][mrss] vocabulary for the directly accessible media.
  
