@@ -91,13 +91,13 @@ and then require the javascript in the asset pipeline, ```app/assets/javascripts
 //= require browse_everything
 ```
 
-The namespacing of the engine means that migrations also look a bit different from a normal application. They have a prefix, in this case ```batch_ingest_```. Here is an example:
+The namespacing of the engine means that migrations also look a bit different from a normal application. They have a prefix, in this case ```dri_batch_ingest_```. Here is an example:
 
 {% highlight ruby %}
 class CreateTableIngestBatch < ActiveRecord::Migration
 
   def change
-    create_table :batch_ingest_ingest_batches do |t|
+    create_table :idri_batch_ingest_ingest_batches do |t|
       t.string :email
       t.string :collection_id
       t.integer :user_ingest_id
@@ -110,15 +110,4 @@ class CreateTableIngestBatch < ActiveRecord::Migration
 end
 {% endhighlight %}
 
-Because of this we need to add a file in ```app/models```.
-
-{% highlight ruby %}
-module DriBatchIngest
-  def self.table_name_prefix
-    'batch_ingest_'
-  end
-end
-{% endhighlight %}
-
-This saves us from having to add the tablename to each model class. This engine now encapsulates all the batch ingest functionality
-needed by the main DRI repository application. You can see the full engine in the DRI [github](https://github.com/Digital-Repository-of-Ireland/dri-batch-ingest).
+This engine now encapsulates all the batch ingest functionality needed by the main DRI repository application. You can see the full engine in the DRI [github](https://github.com/Digital-Repository-of-Ireland/dri-batch-ingest).
