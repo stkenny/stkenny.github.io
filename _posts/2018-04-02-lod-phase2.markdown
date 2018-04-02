@@ -5,7 +5,7 @@ date:   2018-04-02 17:21:00
 categories: semantic sparql
 ---
 
-In [Linked Data Step 1](semantic/sparql/2017/06/09/lod-phase1/) I ended by saying that the next step
+In [Linked Data Step 1](/semantic/sparql/2017/06/09/lod-phase1/) I ended by saying that the next step
 was to perform reconciliation on selected object metadata terms and to add the resulting links to the object's RDF output.
 In fact, looking at the RDF snippets given as examples, you can see that this was already done. The fields I reconciled
 were ```dc:creator```, ```dc:subject``` and ```dc:spatial```. To do this those terms were exported from all the objects
@@ -22,10 +22,10 @@ Here, for example, is the generated RDF output for a reconciled subject term, ba
         <skos:prefLabel xml:lang="en">Easter Rising 1916</skos:prefLabel>
         <rdfs:seeAlso rdf:resource="http://dbpedia.org/resource/Easter_Rising"/>
 </rdf:Description>
-<% endhighlight %}
+{% endhighlight %}
 
 You can see that the subject term value ```Easter Rising 1916``` has been linked to an LCSH subject and a
-DBpedia entry. Now when you view the RDF format output of an object containing this value you see the link
+DBpedia entry. Now when you view the RDF format output of an object containing this value, you see the link
 to the RDF resource instead of the literal:
 
 {% highlight xml %}
@@ -34,7 +34,8 @@ dc:subject
      <https://repository.dri.ie/resource/easter_rising_1916>,
 {% endhighlight %}
 
-The RDF subject URI is retrieved from the SPARQL endpoint by the RDF formatter code.
+When generating an object's RDF output, RDF subject URIs are retrieved by the RDF formatter code by issuing
+a SPARQL query to the SPARQL endpoint.
 
 {% highlight ruby %}
 def sparql_subject(value)
@@ -49,11 +50,11 @@ def sparql_subject(value)
 end
 {% endhighlight %}
 
-This method takes the literal value, e.g. 'Easter Rising 1916', and performs a SPARQL query to find the subject of a triple
-that has this value as a preferred label. If one is found this is used in place for the literal value in the RDF output.
+This method takes the literal value, e.g. 'Easter Rising 1916', and queries for the subject of a triple
+that has this value as a preferred label. If one is found, this is used in place of the literal value.
 
-The final step then is to take the RDF output for each object, including the new reconciled URIs and import them all into the
-SPARQL endpoint where we can then carry out SPARQL queries against them.
+The final step then is to take the RDF output for each object in a collection, including the new reconciled URIs and import them into the
+SPARQL endpoint.
 
 [res-project]:         https://bbcarchdev.github.io/res/
 [openrefine]:          http://openrefine.org/
