@@ -1,0 +1,60 @@
+---
+layout: post
+title:  "Linked Data Step 2"
+date:   2018-04-02 17:21:00
+categories: semantic sparql
+---
+
+In [Linked Data Step 1](semantic/sparql/2017/06/09/lod-phase1/) I ended by saying that the next step
+was to perform reconciliation on selected object metadata terms and to add the resulting links to the object's RDF output.
+In fact, looking at the RDF snippets given as examples, you can see that this was already done. The fields I reconciled
+were ```dc:creator```, ```dc:subject``` and ```dc:spatial```. To do this those terms were exported from all the objects
+contained in one collection and then imported as a project in [OpenRefine][openrefine]. Using OpenRefine together
+with the RDF extension I reconciled these against DBpedia, LCSH (for subjects) and Linked Logainm (for places). The 
+RDF extension allows you to build a skeleton (a template for the RDF output) for exporting to either RDF/XML or TTL. The exported RDF
+can then be imported to a SPARQL endpoint.
+
+Here, for example, is the generated RDF output for a reconciled subject term, based on the skeleton that I defined:
+
+{% highlight xml %}
+<rdf:Description rdf:about="https://repository.dri.ie/resource/easter_rising_1916">
+        <skos:exactMatch rdf:resource="http://id.loc.gov/authorities/sh85068025#concept"/>
+        <skos:prefLabel xml:lang="en">Easter Rising 1916</skos:prefLabel>
+        <rdfs:seeAlso rdf:resource="http://dbpedia.org/resource/Easter_Rising"/>
+</rdf:Description>
+<% endhighlight %}
+
+You can see that the subject term value ```Easter Rising 1916``` has been linked to an LCSH subject and a
+DBpedia entry. Now when you view the RDF format output of an object containing this value you see the link
+to the RDF resource instead of the literal:
+
+{% highlight xml %}
+<https://repository.dri.ie/catalog/3b5918966#id>
+dc:subject 
+     <https://repository.dri.ie/resource/easter_rising_1916>,
+{% endhighlight %}
+
+The RDF subject URI is retrieved from the SPARQL endpoint by the RDF formatter code.
+
+{% highlight ruby %}
+def sparql_subject(value)
+  Rails.cache.fetch(value, expires_in: 48.hours) do
+    provider = DRI::Sparql::Provider::Sparql.new
+    provider.endpoint = AuthoritiesConfig['data.dri.ie']['endpoint']
+
+    triples = provider.retrieve_data([nil, 'skos:prefLabel', "\"#{value}\"@en"])
+
+    triples.present? ? triples.first[0] : nil
+  end
+end
+{% endhighlight %}
+
+This method takes the literal value, e.g. 'Easter Rising 1916', and performs a SPARQL query to find the subject of a triple
+that has this value as a preferred label. If one is found this is used in place for the literal value in the RDF output.
+
+The final step then is to take the RDF output for each object, including the new reconciled URIs and import them all into the
+SPARQL endpoint where we can then carry out SPARQL queries against them.
+
+[res-project]:         https://bbcarchdev.github.io/res/
+[openrefine]:          http://openrefine.org/
+
