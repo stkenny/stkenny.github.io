@@ -10,6 +10,7 @@ description:         'Describing various bits of development, mostly from the Di
 url:                 https://stkenny.github.io
 baseurl:             'https://stkenny.github.io'
 paginate:            5
+plugins: [jekyll-paginate]
 
 # About/contact
 author:

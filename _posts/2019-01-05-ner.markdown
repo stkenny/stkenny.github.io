@@ -1,0 +1,37 @@
+---
+layout: post
+title:  "NER-ding it up"
+date:   2019-01-05 18:32:00
+categories: semantic mapping
+---
+
+At the end of 2018 one of our members completed ingesting a large collection of photographs taken in various locations around Ireland from the 1950s onwards. It would be great for the user to be able to browse this collection on the map view. Unfortunately, however, the approach I described in [Mapping with Added SPARQL](/semantic/sparql/mapping/2015/08/23/mapping/) can't be applied, as the metadata does not contain geographic information in the required field, i.e., `dc:spatial`. There is, however, quite a lot of location information in the metadata in the title and description fields, e.g., 'View at Lough Leane [Lower Lake], Killarney, County Kerry.'. But how to make use of this?
+
+What is needed is a method for extracting the locations from this text. Given that the collection is quite large, an automated approach would be preferable. Happily there is a technique for doing exactly this, Named-entity Recognition (NER). NER attempts to locate and classify named entities (e.g. locations, people, organisations) in unstructured text. There are various services available that will do this for you, but as I have been using OpenRefine in the previous linked data workflows, it made sense to integrate this here as well. Ruben Verbough created a NER extension for OpenRefine as part of the [Free Your Metadata][free-your-metadata] collaboration. The extension had not been updated in some time, and so was not working with the latest OpenRefine 3.1 release. I've created an updated fork of the extension that you can find on [GitHub][ner-extension]. The extension allows you to configure and use multiple online services to perform NER on a column of values in an OpenRefine project. These services include, DBpedia Spotlight, Dandelion API and others.
+
+Once installed using the extension is straightforward. Click the down arrow in the title of the column you want the NER to be performed on and select 'Extract named entities...'. 
+
+[![NER menu option]({{ site.url }}/assets/ner_menu_option.png)]({{ site.url }}/assets/ner_menu_option.png)
+
+This opens a dialog where you can select the services you want to use, and set any extraction parameters available. 
+
+[![NER services dialog]({{ site.url }}/assets/ner_services.png)]({{ site.url }}/assets/ner_services.png)
+
+There first service that I tried, as it is freely available, was the DBpedia Spotlight service. This performed well, and as an added bonus also returns a DBpedia URL with the value. As you can see in the example below, it has managed to extract 'Valentia' and 'County Kerry', from the value 'Valentia Harbour, Valentia, County Kerry'.
+
+[![DBpedia Spotlight NER]({{ site.url }}/assets/dbpedia_ner.png)]({{ site.url }}/assets/dbpedia_ner.png)
+
+Many of the other services require signing up for an API key, and have various limits on the number of calls that you can make. Although this would probably be fine for most use cases, I wanted to try and configure a service that I would have more control over. [Stanford NLP][stanford-nlp] provides a set of human language technology tools including NER. It is possible to download the software and run it locally as a service. This was easy to do following the instructions available in [the CoreNLP documentation][corenlp-docs]. To use this with the NER extension meant writing a new service class. The NER extension has been written in such a way as to make it extensible. The full code for the new service class, `StanfordNLP.java` is available to view on [GitHub][stanford-nlp-service]. Running NER on the column against this service, performed similarly to the DBpedia Spotlight service, although in some cases it gave perhaps better entities. For example it returns 'Kerry', rather than 'County Kerry'. It also managed to extract 'Valentia Harbour', not just 'Valentia'.
+
+[![Stanford NLP]({{ site.url }}/assets/stanford_nlp_ner.png)]({{ site.url }}/assets/stanford_nlp_ner.png)
+
+In some cases it also seemed to find more entities, such as 'Portmagee'. Obviously here we are missing the DBpedia URL, but as the next stage will involve reconciliation using the RDF extension, that might not be an issue.
+
+[![Stanford NLP]({{ site.url }}/assets/stanford_nlp_ner2.png)]({{ site.url }}/assets/stanford_nlp_ner2.png)
+
+[free-your-metadata]:    http://freeyourmetadata.org/named-entity-extraction/
+[ner-extension]:         https://github.com/stkenny/Refine-NER-Extension
+[openrefine]:            http://openrefine.org/
+[stanford-nlp]:          https://stanfordnlp.github.io/CoreNLP/index.html
+[corenlp-docs]:          https://stanfordnlp.github.io/CoreNLP/corenlp-server.html
+[stanford-nlp-service]:  https://github.com/stkenny/Refine-NER-Extension/blob/master/src/org/freeyourmetadata/ner/services
